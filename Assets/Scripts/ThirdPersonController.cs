@@ -14,7 +14,6 @@ public class ThirdPersonController : MonoBehaviour
     public float speed = 5;
     public float jumpHeight = 1;
     public float gravity = -9.81f;
-    [SerializeField] private float pushStrength = 4f;
 
     //variables para el ground sensor
     [Header("Sensor Suelo")]
@@ -35,12 +34,7 @@ public class ThirdPersonController : MonoBehaviour
     public GameObject[] cameras;
 
     public LayerMask rayLayer;
-
-    //Variables para coger objetos
-    public GameObject objectToPick;
-    [SerializeField] private GameObject pickedObject;
-    [SerializeField] Transform interactionZone;
-    
+        
     // Start is called before the first frame update
     void Start()
     {
@@ -56,47 +50,10 @@ public class ThirdPersonController : MonoBehaviour
     void Update()
     {
         //Llamamos la funcion de movimiento
-        //Movement();
         MovementTPS();
-        //MovementTPS2();
         
         //Lamamaos la funcion de salto
         Jump();
-        PickObjects();
-        
-        RaycastHit hit;
-        if(Physics.Raycast(transform.position, transform.forward, out hit, 20f, rayLayer))
-        {
-            Vector3 hitPosition = hit.point;
-            float hitDistance = hit.distance;
-            string hitName = hit.transform.name;
-            
-            //Para activar animaciones del objeto con el que choque
-            //Animator hitAnimator = hit.transform.GameObject.GetComponent<Animator>();
-
-            //Para activar funciones que tengan el script del objeto con el que choque
-            //hit.transform.GameObject.GetComponent<ScriptRandom>().FuncionRandom();
-
-            Debug.DrawRay(transform.position, transform.forward * 20f, Color.green);
-            Debug.Log("posicion impacto: " + hitPosition + "distancia impacto: " + hitDistance + "nombre objeto: " + hitName);
-        }
-
-        else
-        {
-            Debug.DrawRay(transform.position, transform.forward * 20f, Color.red);
-        }
-
-        if(Input.GetButtonDown("Fire1"))
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit2;
-            
-            if(Physics.Raycast(ray, out hit2))
-            {
-                Debug.Log(hit2.point);
-                transform.position = new Vector3(hit2.point.x, transform.position.y, hit2.point.z);
-            }
-        }
     }
 
     #region FuncionesDeMovimiento
@@ -262,49 +219,4 @@ public class ThirdPersonController : MonoBehaviour
         Gizmos.DrawWireSphere(groundSensor.position, sensorRadius);
     }
     #endregion
-
-    #region FuncionAgarrarObjetos
-    void PickObjects()
-    {
-        if(Input.GetKeyDown(KeyCode.E))
-        {
-            if(objectToPick != null && pickedObject == null && objectToPick.gameObject.GetComponent<AgarrarObjetos>().isPickable == true)
-            {
-                pickedObject = objectToPick;
-                pickedObject.GetComponent<AgarrarObjetos>().isPickable = false;
-                pickedObject.transform.SetParent(interactionZone);
-                pickedObject.transform.position = interactionZone.position;
-                pickedObject.GetComponent<Rigidbody>().useGravity = false;
-                pickedObject.GetComponent<Rigidbody>().isKinematic = true;
-            }
-
-            else if(pickedObject != null)
-            {
-                pickedObject.GetComponent<AgarrarObjetos>().isPickable = true;
-                pickedObject.transform.SetParent(null);
-                pickedObject.GetComponent<Rigidbody>().useGravity = true;
-                pickedObject.GetComponent<Rigidbody>().isKinematic = false;
-                pickedObject = null;
-            }
-        }
-    }
-    #endregion
-
-    private void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        if(hit.gameObject.tag == "Empujable")
-        {
-            Rigidbody body = hit.collider.attachedRigidbody;
-
-            if(body == null || body.isKinematic)
-            {
-                return;
-            }
-
-            Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z);
-
-            //Cuanta mas masa tenga el objeto mas lento se movera el objeto
-            body.velocity = pushDir * pushStrength / body.mass;
-        }
-    }
 }
